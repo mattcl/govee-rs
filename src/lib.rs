@@ -11,8 +11,8 @@ use crate::schema::{
     PowerState
 };
 
-mod error;
-mod schema;
+pub mod error;
+pub mod schema;
 
 pub const API_BASE: &str = "https://developer-api.govee.com/v1";
 
