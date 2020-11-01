@@ -20,7 +20,6 @@ pub const API_BASE: &str = "https://developer-api.govee.com/v1";
 #[derive(Debug)]
 enum Verb {
     GET,
-    POST,
     PUT,
 }
 
@@ -44,7 +43,6 @@ impl Client {
 
         let builder = match verb {
             Verb::GET => client.get(&full_path),
-            Verb::POST => client.post(&full_path),
             Verb::PUT => client.put(&full_path),
         };
 
@@ -86,6 +84,14 @@ impl Client {
         Ok(())
     }
 
+    pub fn set_color_temperature(&self, device: &Device, value: u32) -> Result<()> {
+        let req_body = device.color_temperature_request(value)?;
+        self.base_request(Verb::PUT, "devices/control")
+            .json(&req_body)
+            .send()?;
+        Ok(())
+    }
+
     pub fn set_brightness(&self, device: &Device, value: u32) -> Result<()> {
         let req_body = device.brightness_request(value)?;
         self.base_request(Verb::PUT, "devices/control")
@@ -99,7 +105,6 @@ impl Client {
 mod tests {
     use super::*;
     use std::collections::HashSet;
-    use std::env;
     use httpmock::MockServer;
     use httpmock::Method::*;
 
@@ -116,7 +121,7 @@ mod tests {
     }
 
     #[test]
-    fn devices_yields_Devices() {
+    fn devices_yields_devices() {
         let server = MockServer::start();
         let fake_api_key = "foobarbaz";
         let client = Client::new(&server.base_url(), fake_api_key);
@@ -186,6 +191,17 @@ mod tests {
         devices_mock.assert();
     }
 
+    fn fake_device(cmds: HashSet<String>) -> Device {
+        Device {
+            device: "34:20:03:15:82:ae".to_string(),
+            model: "H6089".to_string(),
+            name: "fake device".to_string(),
+            controllable: true,
+            retrievable: true,
+            supported_commands: cmds
+        }
+    }
+
     #[test]
     fn toggle_sends_turn_request() {
         let server = MockServer::start();
@@ -195,14 +211,7 @@ mod tests {
         let mut cmds = HashSet::new();
         cmds.insert("turn".to_string());
 
-        let device = Device {
-            device: "34:20:03:15:82:ae".to_string(),
-            model: "H6089".to_string(),
-            name: "fake device".to_string(),
-            controllable: true,
-            retrievable: true,
-            supported_commands: cmds
-        };
+        let device = fake_device(cmds);
 
         let power_request = device.toggle_request(PowerState::On).unwrap();
 
@@ -229,14 +238,7 @@ mod tests {
         let mut cmds = HashSet::new();
         cmds.insert("color".to_string());
 
-        let device = Device {
-            device: "34:20:03:15:82:ae".to_string(),
-            model: "H6089".to_string(),
-            name: "fake device".to_string(),
-            controllable: true,
-            retrievable: true,
-            supported_commands: cmds
-        };
+        let device = fake_device(cmds);
 
         let color = Color {
             r: 0,
@@ -261,6 +263,33 @@ mod tests {
     }
 
     #[test]
+    fn set_color_temperature_sends_color_temperature_request() {
+        let server = MockServer::start();
+        let fake_api_key = "foobarbaz";
+        let client = Client::new(&server.base_url(), fake_api_key);
+
+        let mut cmds = HashSet::new();
+        cmds.insert("colorTem".to_string());
+
+        let device = fake_device(cmds);
+
+        let color_request = device.color_temperature_request(2500).unwrap();
+
+        let control_mock = server.mock(|when, then| {
+            when.method(PUT)
+                .path("/devices/control/")
+                .header("Content-Type", "application/json")
+                .json_body_obj(&color_request);
+            then.status(201)
+                .header("Content-Type", "application/json");
+        });
+
+        client.set_color_temperature(&device, 2500).unwrap();
+
+        control_mock.assert();
+    }
+
+    #[test]
     fn set_brightness_sends_brightness_request() {
         let server = MockServer::start();
         let fake_api_key = "foobarbaz";
@@ -269,14 +298,7 @@ mod tests {
         let mut cmds = HashSet::new();
         cmds.insert("brightness".to_string());
 
-        let device = Device {
-            device: "34:20:03:15:82:ae".to_string(),
-            model: "H6089".to_string(),
-            name: "fake device".to_string(),
-            controllable: true,
-            retrievable: true,
-            supported_commands: cmds
-        };
+        let device = fake_device(cmds);
 
         let brightness_request = device.brightness_request(22).unwrap();
 
@@ -294,37 +316,37 @@ mod tests {
         control_mock.assert();
     }
 
-    #[test]
-    fn basic_request_bad_test() {
-        let client = Client::new(API_BASE, &env::var("GOVEE_KEY").unwrap());
-        match client.devices() {
-            Ok(devices) => {
-                println!("{}", devices);
-                for device in devices.devices {
-                    // client.toggle(&device, PowerState::On);
-                    let color = Color {
-                        r: 0,
-                        g: 195,
-                        b: 255,
-                    };
-                    // let color = Color {
-                    //     r: 255,
-                    //     g: 0,
-                    //     b: 0,
-                    // };
-                    // let color = Color {
-                    //     r: 0,
-                    //     g: 255,
-                    //     b: 0,
-                    // };
-                    client.toggle(&device, PowerState::On);
-                    // client.set_color(&device, &color);
-                    // client.set_brightness(&device, 77);
-                    println!("{:#?}", client.state(&device).unwrap().properties);
-                }
-                assert!(false);
-            },
-            _ => {},
-        }
-    }
+    // #[test]
+    // fn basic_request_bad_test() {
+    //     let client = Client::new(API_BASE, &env::var("GOVEE_KEY").unwrap());
+    //     match client.devices() {
+    //         Ok(devices) => {
+    //             println!("{}", devices);
+    //             for device in devices.devices {
+    //                 // client.toggle(&device, PowerState::On);
+    //                 let color = Color {
+    //                     r: 0,
+    //                     g: 195,
+    //                     b: 255,
+    //                 };
+    //                 // let color = Color {
+    //                 //     r: 255,
+    //                 //     g: 0,
+    //                 //     b: 0,
+    //                 // };
+    //                 // let color = Color {
+    //                 //     r: 0,
+    //                 //     g: 255,
+    //                 //     b: 0,
+    //                 // };
+    //                 // client.toggle(&device, PowerState::On);
+    //                 // client.set_color(&device, &color);
+    //                 // client.set_brightness(&device, 77);
+    //                 println!("{:#?}", client.state(&device).unwrap().properties);
+    //             }
+    //             assert!(false);
+    //         },
+    //         _ => {},
+    //     }
+    // }
 }

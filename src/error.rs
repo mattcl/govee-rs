@@ -7,6 +7,7 @@ pub type Result<T> = std::result::Result<T, GoveeError>;
 /// GoveeError enumerates all possible errors returned by this library
 #[derive(Debug)]
 pub enum GoveeError {
+    Error(String),
     NoDevicesReturned(),
     Unsupported(Command, Device),
 
@@ -20,6 +21,7 @@ pub enum GoveeError {
 impl std::error::Error for GoveeError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match *self {
+            GoveeError::Error(_) => None,
             GoveeError::NoDevicesReturned() => None,
             GoveeError::Unsupported(_, _) => None,
             GoveeError::IOError(ref err) => Some(err),
@@ -31,6 +33,9 @@ impl std::error::Error for GoveeError {
 impl std::fmt::Display for GoveeError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
+            GoveeError::Error(ref msg) => {
+                write!(f, "{}", msg)
+            },
             GoveeError::NoDevicesReturned() => {
                 write!(f, "No devices were returned from the API")
             },

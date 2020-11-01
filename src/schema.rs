@@ -65,16 +65,29 @@ pub struct Color {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct ColorRequest {
+    device: String,
+    model: String,
+    cmd: ColorInner,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ColorInner {
    name: String,
    value: Color,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ColorRequest {
+pub struct ColorTemRequest {
     device: String,
     model: String,
-    cmd: ColorInner,
+    cmd: ColorTemInner,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ColorTemInner {
+   name: String,
+   value: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -96,6 +109,7 @@ impl Device {
             Command::Turn => self.supported_commands.contains("turn"),
             Command::Brightness => self.supported_commands.contains("brightness"),
             Command::Color => self.supported_commands.contains("color"),
+            Command::ColorTem => self.supported_commands.contains("colorTem"),
         }
     }
 
@@ -137,6 +151,31 @@ impl Device {
         )
     }
 
+    pub fn color_temperature_request(&self, value: u32) -> Result<ColorTemRequest> {
+        if !self.supports(Command::ColorTem) {
+            return Err(GoveeError::Unsupported(Command::ColorTem, self.clone()));
+        }
+
+        if value < 2000 || value > 9000 {
+            return Err(
+                GoveeError::Error(
+                    "Color temperatures must be from 2000 to 9000 inclusive".to_string()
+                )
+            );
+        }
+
+        Ok(
+            ColorTemRequest {
+                device: self.device.clone(),
+                model: self.model.clone(),
+                cmd: ColorTemInner {
+                    name: "color".to_string(),
+                    value: value,
+                }
+            }
+        )
+    }
+
     pub fn brightness_request(&self, value: u32) -> Result<BrightnessRequest> {
         if !self.supports(Command::Brightness) {
             return Err(GoveeError::Unsupported(Command::Brightness, self.clone()));
@@ -167,7 +206,7 @@ impl fmt::Display for Devices {
 
 impl fmt::Display for Device {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({}, {})", self.model, self.name)
+        write!(f, "({}, {}, {:#?})", self.model, self.name, self.supported_commands)
     }
 }
 
@@ -176,6 +215,7 @@ pub enum Command {
     Turn,
     Brightness,
     Color,
+    ColorTem,
 }
 
 impl fmt::Display for Command {
@@ -184,6 +224,7 @@ impl fmt::Display for Command {
             Command::Turn => write!(f, "turn"),
             Command::Brightness => write!(f, "brightness"),
             Command::Color => write!(f, "color"),
+            Command::ColorTem => write!(f, "colorTem"),
         }
     }
 }
@@ -192,4 +233,77 @@ impl fmt::Display for Command {
 mod tests {
     use super::*;
 
+    fn fake_device(cmds: HashSet<String>) -> Device {
+        Device {
+            device: "34:20:03:15:82:ae".to_string(),
+            model: "H6089".to_string(),
+            name: "fake device".to_string(),
+            controllable: true,
+            retrievable: true,
+            supported_commands: cmds
+        }
+    }
+
+    #[test]
+    fn supports_checks_supported_commands() {
+        let mut cmds = HashSet::new();
+        cmds.insert("turn".to_string());
+
+        let device = fake_device(cmds);
+        assert!(device.supports(Command::Turn));
+        assert!(!device.supports(Command::Brightness));
+        assert!(!device.supports(Command::Color));
+        assert!(!device.supports(Command::ColorTem));
+
+        let mut cmds = HashSet::new();
+        cmds.insert("brightness".to_string());
+
+        let device = fake_device(cmds);
+        assert!(!device.supports(Command::Turn));
+        assert!(device.supports(Command::Brightness));
+        assert!(!device.supports(Command::Color));
+        assert!(!device.supports(Command::ColorTem));
+
+        let mut cmds = HashSet::new();
+        cmds.insert("color".to_string());
+
+        let device = fake_device(cmds);
+        assert!(!device.supports(Command::Turn));
+        assert!(!device.supports(Command::Brightness));
+        assert!(device.supports(Command::Color));
+        assert!(!device.supports(Command::ColorTem));
+
+        let mut cmds = HashSet::new();
+        cmds.insert("colorTem".to_string());
+
+        let device = fake_device(cmds);
+        assert!(!device.supports(Command::Turn));
+        assert!(!device.supports(Command::Brightness));
+        assert!(!device.supports(Command::Color));
+        assert!(device.supports(Command::ColorTem));
+
+        let mut cmds = HashSet::new();
+        cmds.insert("turn".to_string());
+        cmds.insert("brightness".to_string());
+        cmds.insert("color".to_string());
+        cmds.insert("colorTem".to_string());
+
+        let device = fake_device(cmds);
+        assert!(device.supports(Command::Turn));
+        assert!(device.supports(Command::Brightness));
+        assert!(device.supports(Command::Color));
+        assert!(device.supports(Command::ColorTem));
+    }
+
+    #[test]
+    fn color_temperature_must_be_between_2000_and_9000() {
+        let mut cmds = HashSet::new();
+        cmds.insert("colorTem".to_string());
+        let device = fake_device(cmds);
+        assert!(device.color_temperature_request(1999).is_err());
+        assert!(device.color_temperature_request(2000).is_ok());
+        assert!(device.color_temperature_request(5000).is_ok());
+        assert!(device.color_temperature_request(9000).is_ok());
+        assert!(device.color_temperature_request(9001).is_err());
+    }
 }
