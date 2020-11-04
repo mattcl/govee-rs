@@ -105,6 +105,7 @@ impl Client {
 mod tests {
     use super::*;
     use std::collections::HashSet;
+    use std::env;
     use httpmock::MockServer;
     use httpmock::Method::*;
 
@@ -315,38 +316,4 @@ mod tests {
 
         control_mock.assert();
     }
-
-    // #[test]
-    // fn basic_request_bad_test() {
-    //     let client = Client::new(API_BASE, &env::var("GOVEE_KEY").unwrap());
-    //     match client.devices() {
-    //         Ok(devices) => {
-    //             println!("{}", devices);
-    //             for device in devices.devices {
-    //                 // client.toggle(&device, PowerState::On);
-    //                 let color = Color {
-    //                     r: 0,
-    //                     g: 195,
-    //                     b: 255,
-    //                 };
-    //                 // let color = Color {
-    //                 //     r: 255,
-    //                 //     g: 0,
-    //                 //     b: 0,
-    //                 // };
-    //                 // let color = Color {
-    //                 //     r: 0,
-    //                 //     g: 255,
-    //                 //     b: 0,
-    //                 // };
-    //                 // client.toggle(&device, PowerState::On);
-    //                 // client.set_color(&device, &color);
-    //                 // client.set_brightness(&device, 77);
-    //                 println!("{:#?}", client.state(&device).unwrap().properties);
-    //             }
-    //             assert!(false);
-    //         },
-    //         _ => {},
-    //     }
-    // }
 }
