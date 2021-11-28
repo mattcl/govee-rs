@@ -35,13 +35,13 @@ impl std::fmt::Display for GoveeError {
         match *self {
             GoveeError::Error(ref msg) => {
                 write!(f, "{}", msg)
-            },
+            }
             GoveeError::NoDevicesReturned() => {
                 write!(f, "No devices were returned from the API")
-            },
+            }
             GoveeError::Unsupported(ref cmd, ref device) => {
                 write!(f, "Unsupported command '{}' for '{}'", cmd, device)
-            },
+            }
             GoveeError::IOError(ref err) => err.fmt(f),
             GoveeError::RequestError(ref err) => err.fmt(f),
         }

@@ -73,8 +73,8 @@ pub struct ColorRequest {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ColorInner {
-   name: String,
-   value: Color,
+    name: String,
+    value: Color,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -86,8 +86,8 @@ pub struct ColorTemRequest {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ColorTemInner {
-   name: String,
-   value: u32,
+    name: String,
+    value: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -125,13 +125,11 @@ impl Device {
             PowerState::Off => cmd.insert("value", "off"),
         };
 
-        Ok(
-            PowerRequest {
-                device: &self.device,
-                model: &self.model,
-                cmd: cmd,
-            }
-        )
+        Ok(PowerRequest {
+            device: &self.device,
+            model: &self.model,
+            cmd: cmd,
+        })
     }
 
     pub fn color_request(&self, color: &Color) -> Result<ColorRequest> {
@@ -139,16 +137,14 @@ impl Device {
             return Err(GoveeError::Unsupported(Command::Color, self.clone()));
         }
 
-        Ok(
-            ColorRequest {
-                device: self.device.clone(),
-                model: self.model.clone(),
-                cmd: ColorInner {
-                    name: "color".to_string(),
-                    value: color.clone(),
-                }
-            }
-        )
+        Ok(ColorRequest {
+            device: self.device.clone(),
+            model: self.model.clone(),
+            cmd: ColorInner {
+                name: "color".to_string(),
+                value: color.clone(),
+            },
+        })
     }
 
     pub fn color_temperature_request(&self, value: u32) -> Result<ColorTemRequest> {
@@ -157,23 +153,19 @@ impl Device {
         }
 
         if value < 2000 || value > 9000 {
-            return Err(
-                GoveeError::Error(
-                    "Color temperatures must be from 2000 to 9000 inclusive".to_string()
-                )
-            );
+            return Err(GoveeError::Error(
+                "Color temperatures must be from 2000 to 9000 inclusive".to_string(),
+            ));
         }
 
-        Ok(
-            ColorTemRequest {
-                device: self.device.clone(),
-                model: self.model.clone(),
-                cmd: ColorTemInner {
-                    name: "color".to_string(),
-                    value: value,
-                }
-            }
-        )
+        Ok(ColorTemRequest {
+            device: self.device.clone(),
+            model: self.model.clone(),
+            cmd: ColorTemInner {
+                name: "color".to_string(),
+                value: value,
+            },
+        })
     }
 
     pub fn brightness_request(&self, value: u32) -> Result<BrightnessRequest> {
@@ -181,16 +173,14 @@ impl Device {
             return Err(GoveeError::Unsupported(Command::Brightness, self.clone()));
         }
 
-        Ok(
-            BrightnessRequest {
-                device: &self.device,
-                model: &self.model,
-                cmd: BrightnessInner {
-                    name: "brightness".to_string(),
-                    value: value,
-                }
-            }
-        )
+        Ok(BrightnessRequest {
+            device: &self.device,
+            model: &self.model,
+            cmd: BrightnessInner {
+                name: "brightness".to_string(),
+                value: value,
+            },
+        })
     }
 }
 
@@ -206,7 +196,11 @@ impl fmt::Display for Devices {
 
 impl fmt::Display for Device {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({}, {}, {:#?})", self.model, self.name, self.supported_commands)
+        write!(
+            f,
+            "({}, {}, {:#?})",
+            self.model, self.name, self.supported_commands
+        )
     }
 }
 
@@ -240,7 +234,7 @@ mod tests {
             name: "fake device".to_string(),
             controllable: true,
             retrievable: true,
-            supported_commands: cmds
+            supported_commands: cmds,
         }
     }
 

@@ -2,20 +2,13 @@ use reqwest;
 
 use crate::error::Result;
 use crate::schema::{
-    Color,
-    Device,
-    DeviceState,
-    DeviceStateResponse,
-    Devices,
-    DevicesResponse,
-    PowerState
+    Color, Device, DeviceState, DeviceStateResponse, Devices, DevicesResponse, PowerState,
 };
 
 pub mod error;
 pub mod schema;
 
 pub const API_BASE: &str = "https://developer-api.govee.com/v1";
-
 
 #[derive(Debug)]
 enum Verb {
@@ -50,18 +43,17 @@ impl Client {
     }
 
     pub fn devices(&self) -> Result<Devices> {
-        let res: DevicesResponse = self.base_request(Verb::GET, "devices")
-            .send()?
-            .json()?;
+        let res: DevicesResponse = self.base_request(Verb::GET, "devices").send()?.json()?;
 
         match res.data {
             Some(devices) => Ok(devices),
-            None => Err(error::GoveeError::NoDevicesReturned())
+            None => Err(error::GoveeError::NoDevicesReturned()),
         }
     }
 
     pub fn state(&self, device: &Device) -> Result<DeviceState> {
-        let res: DeviceStateResponse = self.base_request(Verb::GET, "devices/state")
+        let res: DeviceStateResponse = self
+            .base_request(Verb::GET, "devices/state")
             .query(&[("device", &device.device), ("model", &device.model)])
             .send()?
             .json()?;
@@ -104,10 +96,10 @@ impl Client {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use httpmock::Method::*;
+    use httpmock::MockServer;
     use std::collections::HashSet;
     use std::env;
-    use httpmock::MockServer;
-    use httpmock::Method::*;
 
     #[test]
     fn base_request_adds_auth_headers() {
@@ -174,12 +166,10 @@ mod tests {
 }"#;
         // Create a mock on the server.
         let devices_mock = server.mock(|when, then| {
-            when.method(GET)
-                .path("/devices/");
+            when.method(GET).path("/devices/");
             then.status(200)
                 .header("Content-Type", "application/json")
                 .body(fake_response);
-
         });
 
         // Send an HTTP request to the mock server. This simulates your code.
@@ -199,7 +189,7 @@ mod tests {
             name: "fake device".to_string(),
             controllable: true,
             retrievable: true,
-            supported_commands: cmds
+            supported_commands: cmds,
         }
     }
 
@@ -221,8 +211,7 @@ mod tests {
                 .path("/devices/control/")
                 .header("Content-Type", "application/json")
                 .json_body_obj(&power_request);
-            then.status(201)
-                .header("Content-Type", "application/json");
+            then.status(201).header("Content-Type", "application/json");
         });
 
         client.toggle(&device, PowerState::On).unwrap();
@@ -254,8 +243,7 @@ mod tests {
                 .path("/devices/control/")
                 .header("Content-Type", "application/json")
                 .json_body_obj(&color_request);
-            then.status(201)
-                .header("Content-Type", "application/json");
+            then.status(201).header("Content-Type", "application/json");
         });
 
         client.set_color(&device, &color).unwrap();
@@ -281,8 +269,7 @@ mod tests {
                 .path("/devices/control/")
                 .header("Content-Type", "application/json")
                 .json_body_obj(&color_request);
-            then.status(201)
-                .header("Content-Type", "application/json");
+            then.status(201).header("Content-Type", "application/json");
         });
 
         client.set_color_temperature(&device, 2500).unwrap();
@@ -308,8 +295,7 @@ mod tests {
                 .path("/devices/control/")
                 .header("Content-Type", "application/json")
                 .json_body_obj(&brightness_request);
-            then.status(201)
-                .header("Content-Type", "application/json");
+            then.status(201).header("Content-Type", "application/json");
         });
 
         client.set_brightness(&device, 22).unwrap();
