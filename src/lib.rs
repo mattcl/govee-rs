@@ -1,5 +1,3 @@
-use reqwest;
-
 use crate::error::Result;
 use crate::schema::{
     Color, Device, DeviceState, DeviceStateResponse, Devices, DevicesResponse, PowerState,
@@ -11,6 +9,7 @@ pub mod schema;
 pub const API_BASE: &str = "https://developer-api.govee.com/v1";
 
 #[derive(Debug)]
+#[allow(clippy::upper_case_acronyms)]
 enum Verb {
     GET,
     PUT,
@@ -99,7 +98,6 @@ mod tests {
     use httpmock::Method::*;
     use httpmock::MockServer;
     use std::collections::HashSet;
-    use std::env;
 
     #[test]
     fn base_request_adds_auth_headers() {

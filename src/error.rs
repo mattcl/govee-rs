@@ -9,7 +9,7 @@ pub type Result<T> = std::result::Result<T, GoveeError>;
 pub enum GoveeError {
     Error(String),
     NoDevicesReturned(),
-    Unsupported(Command, Device),
+    Unsupported(Command, Box<Device>),
 
     /// Represents all other cases of IOError
     IOError(std::io::Error),

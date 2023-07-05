@@ -1,0 +1,4 @@
+lib:
+  name: govee-rs
+  repo:
+    uri: https://github.com/mattcl/govee-rs.git

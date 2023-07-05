@@ -115,7 +115,10 @@ impl Device {
 
     pub fn toggle_request(&self, state: PowerState) -> Result<PowerRequest> {
         if !self.supports(Command::Turn) {
-            return Err(GoveeError::Unsupported(Command::Turn, self.clone()));
+            return Err(GoveeError::Unsupported(
+                Command::Turn,
+                Box::new(self.clone()),
+            ));
         }
 
         let mut cmd = HashMap::new();
@@ -128,13 +131,16 @@ impl Device {
         Ok(PowerRequest {
             device: &self.device,
             model: &self.model,
-            cmd: cmd,
+            cmd,
         })
     }
 
     pub fn color_request(&self, color: &Color) -> Result<ColorRequest> {
         if !self.supports(Command::Color) {
-            return Err(GoveeError::Unsupported(Command::Color, self.clone()));
+            return Err(GoveeError::Unsupported(
+                Command::Color,
+                Box::new(self.clone()),
+            ));
         }
 
         Ok(ColorRequest {
@@ -149,10 +155,13 @@ impl Device {
 
     pub fn color_temperature_request(&self, value: u32) -> Result<ColorTemRequest> {
         if !self.supports(Command::ColorTem) {
-            return Err(GoveeError::Unsupported(Command::ColorTem, self.clone()));
+            return Err(GoveeError::Unsupported(
+                Command::ColorTem,
+                Box::new(self.clone()),
+            ));
         }
 
-        if value < 2000 || value > 9000 {
+        if !(2000..=9000).contains(&value) {
             return Err(GoveeError::Error(
                 "Color temperatures must be from 2000 to 9000 inclusive".to_string(),
             ));
@@ -163,14 +172,17 @@ impl Device {
             model: self.model.clone(),
             cmd: ColorTemInner {
                 name: "color".to_string(),
-                value: value,
+                value,
             },
         })
     }
 
     pub fn brightness_request(&self, value: u32) -> Result<BrightnessRequest> {
         if !self.supports(Command::Brightness) {
-            return Err(GoveeError::Unsupported(Command::Brightness, self.clone()));
+            return Err(GoveeError::Unsupported(
+                Command::Brightness,
+                Box::new(self.clone()),
+            ));
         }
 
         Ok(BrightnessRequest {
@@ -178,7 +190,7 @@ impl Device {
             model: &self.model,
             cmd: BrightnessInner {
                 name: "brightness".to_string(),
-                value: value,
+                value,
             },
         })
     }
