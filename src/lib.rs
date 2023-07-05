@@ -95,8 +95,6 @@ impl Client {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use httpmock::Method::*;
-    use httpmock::MockServer;
     use std::collections::HashSet;
 
     #[test]
@@ -113,9 +111,9 @@ mod tests {
 
     #[test]
     fn devices_yields_devices() {
-        let server = MockServer::start();
+        let mut server = mockito::Server::new();
         let fake_api_key = "foobarbaz";
-        let client = Client::new(&server.base_url(), fake_api_key);
+        let client = Client::new(&server.url(), fake_api_key);
 
         let fake_response = r#"
 {
@@ -163,12 +161,12 @@ mod tests {
     "code": 200
 }"#;
         // Create a mock on the server.
-        let devices_mock = server.mock(|when, then| {
-            when.method(GET).path("/devices/");
-            then.status(200)
-                .header("Content-Type", "application/json")
-                .body(fake_response);
-        });
+        let devices_mock = server
+            .mock("GET", "/devices/")
+            .with_status(200)
+            .with_header("Content-Type", "application/json")
+            .with_body(fake_response)
+            .create();
 
         // Send an HTTP request to the mock server. This simulates your code.
         let response = client.devices();
@@ -193,9 +191,9 @@ mod tests {
 
     #[test]
     fn toggle_sends_turn_request() {
-        let server = MockServer::start();
+        let mut server = mockito::Server::new();
         let fake_api_key = "foobarbaz";
-        let client = Client::new(&server.base_url(), fake_api_key);
+        let client = Client::new(&server.url(), fake_api_key);
 
         let mut cmds = HashSet::new();
         cmds.insert("turn".to_string());
@@ -204,13 +202,15 @@ mod tests {
 
         let power_request = device.toggle_request(PowerState::On).unwrap();
 
-        let control_mock = server.mock(|when, then| {
-            when.method(PUT)
-                .path("/devices/control/")
-                .header("Content-Type", "application/json")
-                .json_body_obj(&power_request);
-            then.status(201).header("Content-Type", "application/json");
-        });
+        let control_mock = server
+            .mock("PUT", "/devices/control/")
+            .match_header("Content-Type", "application/json")
+            .match_body(mockito::Matcher::Json(
+                serde_json::to_value(&power_request).unwrap(),
+            ))
+            .with_status(201)
+            .with_header("Content-Type", "application/json")
+            .create();
 
         client.toggle(&device, PowerState::On).unwrap();
 
@@ -219,9 +219,9 @@ mod tests {
 
     #[test]
     fn set_color_sends_color_request() {
-        let server = MockServer::start();
+        let mut server = mockito::Server::new();
         let fake_api_key = "foobarbaz";
-        let client = Client::new(&server.base_url(), fake_api_key);
+        let client = Client::new(&server.url(), fake_api_key);
 
         let mut cmds = HashSet::new();
         cmds.insert("color".to_string());
@@ -236,13 +236,15 @@ mod tests {
 
         let color_request = device.color_request(&color).unwrap();
 
-        let control_mock = server.mock(|when, then| {
-            when.method(PUT)
-                .path("/devices/control/")
-                .header("Content-Type", "application/json")
-                .json_body_obj(&color_request);
-            then.status(201).header("Content-Type", "application/json");
-        });
+        let control_mock = server
+            .mock("PUT", "/devices/control/")
+            .match_header("Content-Type", "application/json")
+            .match_body(mockito::Matcher::Json(
+                serde_json::to_value(&color_request).unwrap(),
+            ))
+            .with_status(201)
+            .with_header("Content-Type", "application/json")
+            .create();
 
         client.set_color(&device, &color).unwrap();
 
@@ -251,9 +253,9 @@ mod tests {
 
     #[test]
     fn set_color_temperature_sends_color_temperature_request() {
-        let server = MockServer::start();
+        let mut server = mockito::Server::new();
         let fake_api_key = "foobarbaz";
-        let client = Client::new(&server.base_url(), fake_api_key);
+        let client = Client::new(&server.url(), fake_api_key);
 
         let mut cmds = HashSet::new();
         cmds.insert("colorTem".to_string());
@@ -262,13 +264,15 @@ mod tests {
 
         let color_request = device.color_temperature_request(2500).unwrap();
 
-        let control_mock = server.mock(|when, then| {
-            when.method(PUT)
-                .path("/devices/control/")
-                .header("Content-Type", "application/json")
-                .json_body_obj(&color_request);
-            then.status(201).header("Content-Type", "application/json");
-        });
+        let control_mock = server
+            .mock("PUT", "/devices/control/")
+            .match_header("Content-Type", "application/json")
+            .match_body(mockito::Matcher::Json(
+                serde_json::to_value(&color_request).unwrap(),
+            ))
+            .with_status(201)
+            .with_header("Content-Type", "application/json")
+            .create();
 
         client.set_color_temperature(&device, 2500).unwrap();
 
@@ -277,9 +281,9 @@ mod tests {
 
     #[test]
     fn set_brightness_sends_brightness_request() {
-        let server = MockServer::start();
+        let mut server = mockito::Server::new();
         let fake_api_key = "foobarbaz";
-        let client = Client::new(&server.base_url(), fake_api_key);
+        let client = Client::new(&server.url(), fake_api_key);
 
         let mut cmds = HashSet::new();
         cmds.insert("brightness".to_string());
@@ -288,13 +292,15 @@ mod tests {
 
         let brightness_request = device.brightness_request(22).unwrap();
 
-        let control_mock = server.mock(|when, then| {
-            when.method(PUT)
-                .path("/devices/control/")
-                .header("Content-Type", "application/json")
-                .json_body_obj(&brightness_request);
-            then.status(201).header("Content-Type", "application/json");
-        });
+        let control_mock = server
+            .mock("PUT", "/devices/control/")
+            .match_header("Content-Type", "application/json")
+            .match_body(mockito::Matcher::Json(
+                serde_json::to_value(&brightness_request).unwrap(),
+            ))
+            .with_status(201)
+            .with_header("Content-Type", "application/json")
+            .create();
 
         client.set_brightness(&device, 22).unwrap();
 
