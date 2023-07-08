@@ -11,8 +11,8 @@ use thiserror::Error;
 use url::Url;
 
 use crate::{
-    endpoints::{DeviceControlEndpoint, DevicesEndpoint},
-    models::{AnySuccessResponse, BaseResponse, Color, ControlCmd, Device, Devices, PowerState},
+    endpoints::{DeviceControlEndpoint, DevicesEndpoint, DeviceStateEndpoint},
+    models::{AnySuccessResponse, BaseResponse, Color, ControlCmd, Device, Devices, PowerState, DeviceState},
 };
 
 #[derive(Debug, Error)]
@@ -123,6 +123,17 @@ impl GoveeClient {
     pub async fn devices(&self) -> Result<Devices, GoveeError> {
         let endpoint = DevicesEndpoint::new();
         let wrapper: BaseResponse<Devices> = endpoint.query_async(self).await?;
+        Ok(wrapper.data)
+    }
+
+    /// Convenience method for getting [DeviceState] for a particular [Device].
+    pub async fn state(&self, device: &Device) -> Result<DeviceState, GoveeError> {
+        let endpoint = DeviceStateEndpoint::builder()
+            .device(&device.device)
+            .model(&device.model)
+            .build()
+            .expect("This should have been safe");
+        let wrapper: BaseResponse<DeviceState> = endpoint.query_async(self).await?;
         Ok(wrapper.data)
     }
 
@@ -278,6 +289,7 @@ mod tests {
 
         let devices_mock = server
             .mock("GET", "/v1/devices?")
+            .match_header("Govee-API-Key", fake_api_key)
             .with_status(200)
             .with_header("Content-Type", "application/json")
             .with_body(fake_response)
@@ -311,6 +323,49 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn state() {
+        let mut server = Server::new_async().await;
+        let fake_api_key = "foobarbaz";
+        let client = GoveeClient::new(&server.url(), fake_api_key).unwrap();
+
+        let device = fake_device();
+
+        let fake_response = r#"
+            {
+                "data": {
+                    "device": "34:20:03:15:82:ae",
+                    "model": "H6089",
+                    "properties": [
+                        {"online": false},
+                        {"powerState": "off"},
+                        {"brightness": 82},
+                        {
+                            "color": {"r": 11, "g": 22, "b": 33 }
+                        }
+                    ]
+                },
+                "message": "Success",
+                "code": 201
+            }"#;
+
+        let control_mock = server
+            .mock("GET", "/v1/devices/state")
+            .match_header("Govee-API-Key", fake_api_key)
+            .match_query(mockito::Matcher::AllOf(vec![
+                mockito::Matcher::UrlEncoded("device".into(), device.device.clone()),
+                mockito::Matcher::UrlEncoded("model".into(), device.model.clone()),
+            ]))
+            .with_status(200)
+            .with_body(fake_response)
+            .create_async()
+            .await;
+
+        client.state(&device).await.unwrap();
+
+        control_mock.assert_async().await;
+    }
+
+    #[tokio::test]
     async fn turn() {
         let mut server = Server::new_async().await;
         let fake_api_key = "foobarbaz";
@@ -333,6 +388,7 @@ mod tests {
 
         let control_mock = server
             .mock("PUT", "/v1/devices/control?")
+            .match_header("Govee-API-Key", fake_api_key)
             .match_header("Content-Type", "application/json")
             .match_body(mockito::Matcher::Json(
                 serde_json::to_value(&control_request).unwrap(),
@@ -370,6 +426,7 @@ mod tests {
 
         let control_mock = server
             .mock("PUT", "/v1/devices/control?")
+            .match_header("Govee-API-Key", fake_api_key)
             .match_header("Content-Type", "application/json")
             .match_body(mockito::Matcher::Json(
                 serde_json::to_value(&control_request).unwrap(),
@@ -413,6 +470,7 @@ mod tests {
 
         let control_mock = server
             .mock("PUT", "/v1/devices/control?")
+            .match_header("Govee-API-Key", fake_api_key)
             .match_header("Content-Type", "application/json")
             .match_body(mockito::Matcher::Json(
                 serde_json::to_value(&control_request).unwrap(),
@@ -450,6 +508,7 @@ mod tests {
 
         let control_mock = server
             .mock("PUT", "/v1/devices/control?")
+            .match_header("Govee-API-Key", fake_api_key)
             .match_header("Content-Type", "application/json")
             .match_body(mockito::Matcher::Json(
                 serde_json::to_value(&control_request).unwrap(),
