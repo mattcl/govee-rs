@@ -11,8 +11,11 @@ use thiserror::Error;
 use url::Url;
 
 use crate::{
-    endpoints::{DeviceControlEndpoint, DevicesEndpoint, DeviceStateEndpoint},
-    models::{AnySuccessResponse, BaseResponse, Color, ControlCmd, Device, Devices, PowerState, DeviceState},
+    endpoints::{DeviceControlEndpoint, DeviceStateEndpoint, DevicesEndpoint},
+    models::{
+        AnySuccessResponse, BaseResponse, Color, ControlCmd, Device, DeviceState, Devices,
+        PowerState,
+    },
 };
 
 #[derive(Debug, Error)]
