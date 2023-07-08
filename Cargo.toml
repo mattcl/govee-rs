@@ -5,13 +5,14 @@ authors = ["Matt Chun-Lum <matt@questionable.engineering>"]
 edition = "2021"
 description = "A simple interface to Govee devices via their developer API"
 rust-version = "1.65.0"
+publish = ["ancalagon"]
 
 [dependencies]
 async-trait = "0.1.71"
 bytes = "^1"
 derive_builder = "0.12"
 futures-util = "0.3.21"
-gen-api-wrapper = { version = "0.1.1", git = "https://github.com/mattcl/gen-api-wrapper.git" }
+gen-api-wrapper = "0.1.1"
 hex_color = "2.0.0"
 http = "~0.2"
 reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }
