@@ -1,17 +1,25 @@
 [package]
 name = "govee-rs"
-version = "0.1.1"
+version = "1.0.0"
 authors = ["Matt Chun-Lum <matt@questionable.engineering>"]
-edition = "2018"
+edition = "2021"
 description = "A simple interface to Govee devices via their developer API"
 rust-version = "1.65.0"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+async-trait = "0.1.71"
+bytes = "^1"
+derive_builder = "0.12"
+futures-util = "0.3.21"
+gen-api-wrapper = { version = "0.1.1", git = "https://github.com/mattcl/gen-api-wrapper.git" }
+hex_color = "2.0.0"
+http = "~0.2"
+reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }
 serde = { version = "1.0.103", features = ["derive"] }
-serde_json = "1.0"
+serde_json = "1.0.2"
+thiserror = "1.0.31"
+url = { version = "^2.4", features = ["serde"] }
 
 [dev-dependencies]
 mockito = "1.1.0"
+tokio = { version = "1.25", features = ["full"] }
