@@ -4,7 +4,7 @@ use hex_color::HexColor;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Debug, Clone, Eq, PartialEq, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct BaseResponse<T>
 where
     T: 'static,
@@ -15,7 +15,7 @@ where
 pub type AnySuccessResponse = BaseResponse<Value>;
 
 /// Control commands that can be issued against govee devices.
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Deserialize)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ControlCommand {
     /// Toggling power state.
@@ -32,7 +32,7 @@ pub enum ControlCommand {
 }
 
 /// A representation of a Govee device.
-#[derive(Debug, Clone, Default, Eq, PartialEq, Deserialize)]
+#[derive(Debug, Clone, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Device {
     pub model: String,
     pub device: String,
@@ -51,7 +51,7 @@ impl Device {
     }
 }
 
-#[derive(Debug, Clone, Default, Eq, PartialEq, Deserialize)]
+#[derive(Debug, Clone, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Devices {
     pub devices: Vec<Device>,
 }
@@ -64,7 +64,7 @@ impl Deref for Devices {
     }
 }
 
-#[derive(Debug, Clone, Default, Eq, PartialEq, Deserialize)]
+#[derive(Debug, Clone, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct DeviceState {
     pub device: String,
     pub model: String,
