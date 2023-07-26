@@ -22,7 +22,7 @@ impl Endpoint for DevicesEndpoint {
 
 impl DevicesEndpoint {
     pub fn new() -> Self {
-        Self::default()
+        Self
     }
 }
 
